@@ -1,17 +1,23 @@
 {
-    "name": "@bartbutenaers/node-red-dashboard-2-ui-svg",
+    "name": "@bartbutenaers/node-red-dashboard-2-ui-web-push",
     "version": "1.0.0",
-    "description": "A Node-RED UI node for SVG graphics in Dashboard 2.0",
+    "description": "A Node-RED UI node for web push notifications Dashboard 2.0",
     "keywords": [
         "node-red",
         "node-red-dashboard-2",
-        "svg",
-        "draw",
-        "graphics"
+        "web",
+        "push",
+        "notification",
+        "FCM",
+        "firebase",
+        "messaging",
+        "APNS",
+        "Android",
+        "iOS"
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/bartbutenaers/node-red-dashboard-2-ui-svg.git"
+        "url": "https://github.com/bartbutenaers/node-red-dashboard-2-ui-web-push.git"
     },
     "license": "Apache-2.0",
     "author": {
@@ -21,8 +27,8 @@
     "contributors": [
     ],
     "exports": {
-        "import": "./resources/ui-svg.esm.js",
-        "require": "./resources/ui-svg.umd.js"
+        "import": "./resources/ui-web-push.esm.js",
+        "require": "./resources/ui-web-push.umd.js"
     },
     "files": [
         "dist/*",
@@ -45,7 +51,8 @@
     "dependencies": {
         "to-title-case": "^1.0.0",
         "vue": "^3.3.8",
-        "vuex": "^4.1.0"
+        "vuex": "^4.1.0",
+        "web-push": "^3.6.7"
     },
     "devDependencies": {
         "@vitejs/plugin-vue": "^4.5.0",
@@ -63,15 +70,15 @@
     "node-red": {
         "version": ">=3.0.0",
         "nodes": {
-            "ui-example": "nodes/ui-svg.js"
+            "ui-web-push": "nodes/web-push.js"
         }
     },
     "node-red-dashboard-2": {
         "version": "1.0.0",
         "widgets": {
-            "ui-svg": {
-                "output": "ui-svg.umd.js",
-                "component": "UISvg"
+            "ui-web-push": {
+                "output": "ui-web-push.umd.js",
+                "component": "UIWebPush"
             }
         }
     }

@@ -1,0 +1,205 @@
+<script type="text/javascript">
+    RED.nodes.registerType('ui-web-push', {
+        category: RED._('@flowfuse/node-red-dashboard/ui-base:ui-base.label.category'),
+        color: RED._('@flowfuse/node-red-dashboard/ui-base:ui-base.colors.light'),
+        defaults: {
+            name: { value: "" },
+            group: { type: 'ui-group', required: true },
+            width: {
+                value: 0,
+                validate: function (v) {
+                    const width = v || 0
+                    const currentGroup = $('#node-input-group').val() || this.group
+                    const groupNode = RED.nodes.node(currentGroup)
+                    const valid = !groupNode || +width <= +groupNode.width
+                    $('#node-input-size').toggleClass('input-error', !valid)
+                    return valid
+                }
+            },
+            height: { value: 0 },
+            // Web push related settings
+            // TODO webPushConfig: {value:"", type: "vapid-configuration"},
+            autoLoad: {value: false},
+            showSwitchMessage: {value: true},
+            switchLabel: {value:"All events", required: true},
+            // VAPID related properties
+            // way of the push service to contact the sender of the notification: that your volume of messages is
+            // too high, or that there will be changes to the service they want to inform you about.
+            subject: { 
+                value: null, 
+                required: true,
+                validate: function (v) {
+                     // The 'required' property doesn't result in a red triangle when empty
+                     return v !== null && v.trim() !== ''
+                }
+            },
+            publicKey: {
+                value: null,
+                required: true,
+                validate: function (v) {
+                     // The 'required' property doesn't result in a red triangle when empty
+                     return v !== null && v.trim() !== ''
+                }
+            }, 
+            timeout: { value: null },
+            ttl: { value: 2419200 }, // Default TTL is four weeks
+            headers: { value: [] },
+            urgency: { value: 'normal'},
+            contextStore: { value: 'default' }
+        },
+        credentials: {
+            privateKey: {
+                type: "password",
+                required: true,
+                validate: function (v) {
+                     // The 'required' property doesn't result in a red triangle when empty
+                     // TODO: for credentials, the validate function is never called
+                     return v !== null && v.trim() !== ''
+                }
+            }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "font-awesome/fa-paper-plane",
+        paletteLabel: "web push",
+        label: function() {
+            return this.name || "ui web push";
+        },
+        labelStyle: function () {
+            return this.name ? 'node_label_italic' : ''
+        },
+        oneditprepare: function () {
+            let node = this
+
+            $('#node-input-size').elementSizer({
+                width: '#node-input-width',
+                height: '#node-input-height',
+                group: '#node-input-group'
+            });
+            
+            //var dependencyType = RED.nodes.getType("web-push");
+            
+            // Show the form tip when the web-push type is not available
+            // (i.e. when the node-red-contrib-web-push node dependency has not been installed by the user)
+            //if (dependencyType) {
+            //    $("#tip-dependency").hide();
+            //} else {
+            //    $("#tip-dependency").show();
+            //}
+debugger
+            $('#node-input-generateKeyPair').click(function () {
+                debugger
+                if ($('#node-input-publicKey').val() || $('#node-input-privateKey').val()) {
+                    if (!confirm('The current keypair will be overwritten!  Are you sure to continue?')) {
+                        // The user has clicked the 'Cancel' button
+                        return
+                    }
+                }
+                
+                // Ask the server side flow to generate a new key pair
+                $.getJSON('ui_web_push/generate_vapid_key_pair', function(jsonData) {
+                    // Show the new keys on the config screen
+                    $('#node-input-publicKey').val(jsonData.publicKey)
+                    $('#node-input-privateKey').val(jsonData.privateKey)
+                    
+                    // Make sure the validators are being triggerd, otherwise the red border will remain around the input fields
+                    $('#node-input-publicKey').change()
+                    $('#node-input-privateKey').change()
+                }).error(function() {
+                    RED.notify('Cannot create VAPID key pair.  See Node-RED log for more details...', 'error');
+                })
+            })
+            // Show tabsheets
+            node.tabs = RED.tabs.create({
+                id: 'node-web-push-tabsheets',
+                onchange: function(tab) {
+                    // Show only the content (i.e. the children) of the selected tabsheet, and hide the others
+                    $('#node-web-push-tabsheets-content').children().hide()
+                    $('#' + tab.id).show()
+                }
+            })
+            node.tabs.addTab({
+                id: 'node-web-push-tabsheet-switch',
+                label: 'Switch'
+            })
+            node.tabs.addTab({
+                id: 'node-web-push-tabsheet-vapid',
+                label: 'VAPID'
+            })
+        }
+    });
+</script>
+
+<script type="text/html" data-template-name="ui-web-push">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-group"><i class="fa fa-table"></i> Group</label>
+        <input type="text" id="node-input-group">
+    </div>
+    <div class="form-row">
+        <!-- Tabsheets -->
+        <ul style="background: #fff; min-width: 600px; margin-bottom: 20px;" id="node-web-push-tabsheets"></ul>
+    </div>
+    <div id="node-web-push-tabsheets-content" style="min-height: 150px">
+        <!-- Content of all tabsheets -->
+        <div id="node-web-push-tabsheet-switch" style="position: relative; margin-top: 30px;">
+            <div class="form-row">
+                <label for="node-input-switchLabel"><i class="fa fa-font"></i> Label</label>
+                <input type="text" id="node-input-switchLabel" placeholder="Switch label">
+            </div>
+            <div class="form-row">
+                <label for="node-input-contextStore"><i class="fa fa-database"></i> Context store</label>
+                <input type="text" id="node-input-contextStore" placeholder="Store name (contextStorage in settings.js)">
+            </div>
+            <div class="form-row">
+                <label for="node-input-autoLoad"><i class="fa fa-download"></i> Auto load</label>
+                <input type="checkbox" id="node-input-autoLoad" style="width:auto ;border:none; vertical-align:baseline;" placeholder="0">
+                <span for="node-input-autoLoad"> Automatic load subscription at dashboard startup</span>
+            </div>
+            <div class="form-row">
+                <label for="node-input-showSwitchMessage"><i class="fa fa-commenting"></i> Switch state</label>
+                <input type="checkbox" id="node-input-showSwitchMessage" style="width:auto ;border:none; vertical-align:baseline;" placeholder="0">
+                <span for="node-input-showSwitchMessage"> Show switch message (to explain its state)</span>
+            </div>
+        </div>
+        <div id="node-web-push-tabsheet-vapid" style="position: relative; margin-top: 30px;">
+            <div class="form-row">
+                <label>&nbsp;</label>
+                <button id="node-input-generateKeyPair"><i class="fa fa-exchange"></i> Generate VAPID keypair</button>
+            </div>
+            <div class="form-row">
+                <label for="node-input-publicKey"><i class="fa fa-lock"></i> Public Key</label>
+                <input type="text" id="node-input-publicKey" placeholder="Generate VAPID public key">
+            </div>
+            <div class="form-row">
+                <label for="node-input-privateKey"><i class="fa fa-key"></i> Private Key</label>
+                <input type="password" id="node-input-privateKey" placeholder="Generate VAPID private key">
+            </div>
+            </br>
+            <div class="form-row">
+                <label for="node-input-subject"><i class="fa fa-reply"></i> Subject</label>
+                <input type="text" id="node-input-subject" placeholder="URL or a 'mailto:' address">
+            </div>
+            <div class="form-row">
+                <label for="node-input-urgency"><i class="fa fa-tachometer"></i> Urgency</label>
+                <select id="node-input-urgency">
+                    <option value="very-low">Very low</option>
+                    <option value="low">Low</option>
+                    <option value="normal">Normal</option>
+                    <option value="high">High</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label for="node-input-timeout"><i class="fa fa-clock-o"></i> Timeout</label>
+                <input type="number" id="node-input-timeout">
+            </div>
+            <div class="form-row">
+                <label for="node-input-ttl"><i class="fa fa-heartbeat"></i> TTL</label>
+                <input type="number" id="node-input-ttl">
+            </div>
+        </div>
+    </div>
+</script>

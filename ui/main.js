@@ -5,6 +5,11 @@
  */
 import { createApp } from 'vue'
 
-import UISvg from './components/UISvg.vue'
+import UIWebPush from './components/UIWebPush.vue'
 
-createApp(UISvg).mount('#app')
+createApp(UIWebPush).mount('#app')
+
+// Make the service worker js file available for the Vite app.
+// This way the service worker is available when the app loads.
+//import { register } from "register-service-worker";
+//register(`/service-worker.js`)
