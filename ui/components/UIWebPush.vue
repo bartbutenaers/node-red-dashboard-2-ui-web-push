@@ -83,7 +83,7 @@ export default {
                             // Send the existing push subscription to the subscription manager inside the Node-RED flow
                             this.send({
                                 payload: subscription,
-                                topic: 'subscribe'
+                                topic: 'fetched_subscription'
                             })
                         }
                     }).catch((error) => {
@@ -153,7 +153,7 @@ export default {
                         // But this means that the subscription manager in Node-RED should remove duplicate subscriptions!
                         this.send({
                             payload: subscription,
-                            topic: 'subscribe'
+                            topic: 'auto_loaded_subscription'
                         })
                     }
 
@@ -249,7 +249,7 @@ export default {
                         // Send the new push subscription to the subscription manager inside the Node-RED flow
                         this.send({
                             payload: subscription,
-                            topic: 'subscribe'
+                            topic: 'new_subscription'
                         })
 
                         this.setSwitchMessage('Subscribed for receiving notifications')
@@ -286,7 +286,7 @@ export default {
                             // Let the Node-RED flow know about the unsubscription
                             this.send({
                                 payload: subscription,
-                                topic: "unsubscribe"
+                                topic: "new_unsubscription"
                             })
 
                             this.setSwitchMessage('Unsubscribed to receive notifications')

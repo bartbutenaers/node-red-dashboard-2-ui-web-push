@@ -116,7 +116,9 @@ module.exports = function (RED) {
                 let subscriptions = node.context().get('subscriptions', node.config.contextStore) || []
 debugger;
                 switch(msg.topic) {
-                    case 'subscribe':
+                    case 'new_subscription':
+                    case 'auto_loaded_subscription':
+                    case 'fetched_subscription':
                         let subscription = msg.payload
 
                         // Find all subscriptions for the specified endpoint
@@ -132,7 +134,7 @@ debugger;
 
                         break
 
-                    case 'unsubscribe':
+                    case 'new_unsubscription':
                         let unsubscription = msg.payload
 
                         // Find all subscriptions for the specified endpoint
