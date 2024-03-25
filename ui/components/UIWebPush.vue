@@ -232,7 +232,7 @@ export default {
             this.loadingEnabled = false
             this.switchEnabled = true
 
-            this.$socket.emit('widget-action', this.id, msg)
+            //TODO this.$socket.emit('widget-action', this.id, msg)
         },
         subscribe(permission) {
             switch (permission) {

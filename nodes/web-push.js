@@ -62,6 +62,7 @@ module.exports = function (RED) {
                         }
 
                         if(payload && typeof payload === 'object') {
+                            payload.data = payload.data || {}
                             payload = JSON.stringify(payload)
                         }
                         else {
