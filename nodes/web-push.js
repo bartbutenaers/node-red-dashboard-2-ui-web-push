@@ -122,8 +122,8 @@ debugger;
                         let subscription = msg.payload
 
                         // Find all subscriptions for the specified endpoint
-                        let endpointSubscriptions = subscriptions.filter( subscription => {
-                            return subscription.endpoint == subscription.endpoint
+                        let endpointSubscriptions = subscriptions.filter( _subscription => {
+                            return _subscription.endpoint == subscription.endpoint
                         })
 
                         // Only add the subscription if it is not available yet
@@ -138,8 +138,8 @@ debugger;
                         let unsubscription = msg.payload
 
                         // Find all subscriptions for the specified endpoint
-                        let filteredSubscriptions = subscriptions.filter( subscription => {
-                            return subscription.endpoint != unsubscription.endpoint
+                        let filteredSubscriptions = subscriptions.filter( _subscription => {
+                            return _subscription.endpoint != unsubscription.endpoint
                         })
 
                        // When the subscription is not available yet, it doesn't need to be removed
