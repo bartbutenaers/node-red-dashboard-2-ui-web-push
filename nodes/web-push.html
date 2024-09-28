@@ -17,12 +17,29 @@
                 }
             },
             height: { value: 0 },
-            // Web push related settings
+            // ================== Web push related settings =================
             // TODO webPushConfig: {value:"", type: "vapid-configuration"},
             autoLoad: {value: false},
             showSwitchMessage: {value: true},
             switchLabel: {value:"All events", required: true},
-            // VAPID related properties
+
+            // ================== Notification related settings =================
+            title: {value: ""},
+            body: {value: "payload"},
+            bodyType: {value: "msg"},
+            badge: {value: ""},
+            icon: {value: ""},
+            image: {value: ""},
+            url: {value: ""},
+            volume: {value: "default"},
+            badge: {value: ""},
+            tag: {value: ""},
+            interaction: {value: "required"},
+            timeout: { value: null },
+            ttl: { value: 2419200 }, // Default TTL is four weeks
+            urgency: { value: 'normal'},
+
+            // ================= VAPID related properties =====================
             // way of the push service to contact the sender of the notification: that your volume of messages is
             // too high, or that there will be changes to the service they want to inform you about.
             subject: { 
@@ -41,10 +58,9 @@
                      return v !== null && v.trim() !== ''
                 }
             }, 
-            timeout: { value: null },
-            ttl: { value: 2419200 }, // Default TTL is four weeks
-            headers: { value: [] },
-            urgency: { value: 'normal'},
+
+            // ================= Other properties =====================
+            actions: { value: [] },
             contextStore: { value: 'default' }
         },
         credentials: {
@@ -86,6 +102,12 @@
             //} else {
             //    $("#tip-dependency").show();
             //}
+
+            $('#node-input-body').typedInput({
+                default: 'msg',
+                typeField: $('#node-input-bodyType'),
+                types: ['msg', 'str']
+            })
 debugger
             $('#node-input-generateKeyPair').click(function () {
                 debugger
@@ -109,6 +131,61 @@ debugger
                     RED.notify('Cannot create VAPID key pair.  See Node-RED log for more details...', 'error');
                 })
             })
+
+            let actionsList = $('#node-input-actions-container').css('min-height','150px')
+                                                                 .css('min-width','450px')
+                                                                 .editableList({
+                header: $('<div>').css('margin-left','28px')
+                                  .css('margin-right','28px')
+                                  .css('padding-right','0px')
+                                  .append($.parseHTML("<div style='width:23%; margin-left:5px; margin-right:5px; display: inline-grid'><b>Action</b></div>" +
+                                                      "<div style='width:23%; margin-left:5px; margin-right:5px; display: inline-grid'><b>Title</b></div>" +
+                                                      "<div style='width:46%; margin-left:5px; margin-right:5px; display: inline-grid'><b>Icon</b></div>")),
+                addItem: function(container, i, item) {
+                    // Add a new row to the editableList
+                    let row = $('<div/>').appendTo(container)
+
+                    // Column 1
+                    let actionField = $('<input/>').addClass('node-input-actions-action')
+                                                   .attr('type','text')
+                                                   .attr('placeholder','action')
+                                                   .css('width','23%')
+                                                   .css('margin-left','5px')
+                                                   .css('margin-right','5px')
+                                                   .appendTo(row)
+                    actionField.val(item.action || '')
+
+                    // Column 2
+                    let titleField = $('<input/>').addClass('node-input-actions-title')
+                                                  .attr('type','text')
+                                                  .attr('placeholder','title')
+                                                  .css('width','23%')
+                                                  .css('margin-left','5px')
+                                                  .css('margin-right','5px')
+                                                  .appendTo(row)
+                    titleField.val(item.title || '')
+
+                    // Column 3
+                    let iconField = $('<input/>').addClass('node-input-actions-icon')
+                                                 .attr('type','text')
+                                                 .attr('placeholder','icon url')
+                                                 .css('width','46%')
+                                                 .css('margin-left','5px')
+                                                 .css('margin-right','5px')
+                                                 .appendTo(row)
+                    iconField.val(item.icon || '')
+                },
+                removable: true,
+                sortable:true
+            })
+
+            // Show all the actions (stored in this node) into the editableList
+            if (this.actions) {
+                this.actions.forEach(function(action, index) {
+                    actionsList.editableList('addItem', action)
+                })
+            }
+
             // Show tabsheets
             node.tabs = RED.tabs.create({
                 id: 'node-web-push-tabsheets',
@@ -123,11 +200,35 @@ debugger
                 label: 'Switch'
             })
             node.tabs.addTab({
+                id: 'node-web-push-tabsheet-notification',
+                label: 'Notification'
+            })
+            node.tabs.addTab({
+                id: 'node-web-push-tabsheet-actions',
+                label: 'Actions'
+            })
+            node.tabs.addTab({
                 id: 'node-web-push-tabsheet-vapid',
                 label: 'VAPID'
             })
+        },
+        oneditsave: function() {
+            let node = this
+
+            // Copy all the actions from the editableList to this node
+            node.actions = []
+            let actionsList = $('#node-input-actions-container').editableList('items')
+            actionsList.each(function(i) {
+                let item = $(this)
+
+                node.actions.push({
+                    action: item.find('.node-input-actions-action').val(),
+                    title:  item.find('.node-input-actions-title').val(),
+                    icon:   item.find('.node-input-actions-icon').val()
+                })
+            })
         }
-    });
+    })
 </script>
 
 <script type="text/html" data-template-name="ui-web-push">
@@ -165,6 +266,74 @@ debugger
                 <span for="node-input-showSwitchMessage"> Show switch message (to explain its state)</span>
             </div>
         </div>
+        <div id="node-web-push-tabsheet-notification" style="position: relative; margin-top: 30px;">
+            <div class="form-row">
+                <label for="node-input-body"><i class="fa fa-database"></i> Body</label>
+                <input type="text" id="node-input-body" style="width: 70%;">
+                <input type="hidden" id="node-input-bodyType">
+            </div>
+            <div class="form-row">
+                <label for="node-input-title"><i class="fa fa-font"></i> Title</label>
+                <input type="text" id="node-input-title">
+            </div>
+            <br>
+            <div class="form-row">
+                <label for="node-input-badge"><i class="fa fa-user-circle"></i> Badge</label>
+                <input type="text" id="node-input-badge" placeholder="badge url">
+            </div>
+            <div class="form-row">
+                <label for="node-input-icon"><i class="fa fa-id-badge"></i> Icon</label>
+                <input type="text" id="node-input-icon" placeholder="icon url">
+            </div>
+            <div class="form-row">
+                <label for="node-input-image"><i class="fa fa-picture-o"></i> Image</label>
+                <input type="text" id="node-input-image" placeholder="image url">
+            </div>
+            <br>
+            <div class="form-row">
+                <label for="node-input-url"><i class="fa fa-external-link"></i> Url</label>
+                <input type="text" id="node-input-url" placeholder="url">
+            </div>
+            <div class="form-row">
+                <label for="node-input-tag"><i class="fa fa-hashtag"></i> Tag</label>
+                <input type="text" id="node-input-tag" placeholder="tag">
+            </div>
+            <div class="form-row">
+                <label for="node-input-interaction"><i class="fa fa-mouse-pointer"></i> Interaction</label>
+                <select id="node-input-interaction" style="width:70%;">
+                    <option value="required">Required</option>
+                    <option value="optional">Optional</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label for="node-input-urgency"><i class="fa fa-tachometer"></i> Urgency</label>
+                <select id="node-input-urgency" style="width:70%;">
+                    <option value="very-low">Very low</option>
+                    <option value="low">Low</option>
+                    <option value="normal">Normal</option>
+                    <option value="high">High</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label for="node-input-volume"><i class="fa fa-volume-up"></i> volume</label>
+                <select id="node-input-volume" style="width:70%;">
+                    <option value="silent">Silent</option>
+                    <option value="default">Default</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label for="node-input-timeout"><i class="fa fa-clock-o"></i> Timeout</label>
+                <input type="number" id="node-input-timeout">
+            </div>
+            <div class="form-row">
+                <label for="node-input-ttl"><i class="fa fa-heartbeat"></i> TTL</label>
+                <input type="number" id="node-input-ttl">
+            </div>
+        </div>
+        <div id="node-web-push-tabsheet-actions" style="position: relative; margin-top: 30px;">
+            <!-- Editable list with file path patterns -->
+            <ol id="node-input-actions-container"></ol>
+        </div>
         <div id="node-web-push-tabsheet-vapid" style="position: relative; margin-top: 30px;">
             <div class="form-row">
                 <label>&nbsp;</label>
@@ -182,23 +351,6 @@ debugger
             <div class="form-row">
                 <label for="node-input-subject"><i class="fa fa-reply"></i> Subject</label>
                 <input type="text" id="node-input-subject" placeholder="URL or a 'mailto:' address">
-            </div>
-            <div class="form-row">
-                <label for="node-input-urgency"><i class="fa fa-tachometer"></i> Urgency</label>
-                <select id="node-input-urgency">
-                    <option value="very-low">Very low</option>
-                    <option value="low">Low</option>
-                    <option value="normal">Normal</option>
-                    <option value="high">High</option>
-                </select>
-            </div>
-            <div class="form-row">
-                <label for="node-input-timeout"><i class="fa fa-clock-o"></i> Timeout</label>
-                <input type="number" id="node-input-timeout">
-            </div>
-            <div class="form-row">
-                <label for="node-input-ttl"><i class="fa fa-heartbeat"></i> TTL</label>
-                <input type="number" id="node-input-ttl">
             </div>
         </div>
     </div>
