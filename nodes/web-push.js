@@ -42,6 +42,13 @@ module.exports = function (RED) {
                 // Note that it is NOT possible to dynamically override the VAPID settings (public, private key, subject).
                 // Because when dynamically overwritting those, all existing subscriptions would become useless. 
                 if (updates) {
+                    if (typeof updates.actions !== 'undefined') {
+                        if (Array.isArray(updates.actions) && updates.actions.every(item => item.action && item.title && item.icon)) {
+                            base.stores.state.set(group.getBase(), node, msg, 'actions', updates.actions)
+                        } else {
+                            node.warn('msg.ui_update.actions should be an array of objects (with properties "action", "title" and "icon"')
+                        }
+                    }
                     if (typeof updates.autoLoad !== 'undefined') {
                         if (typeof updates.autoLoad === 'boolean') {
                             base.stores.state.set(group.getBase(), node, msg, 'autoLoad', updates.autoLoad)
@@ -239,8 +246,11 @@ module.exports = function (RED) {
                             notificationPayload.silent = true
                         }
 
-                        // TODO optionally add actions (array of objects which have an action ('open' or 'dismiss'), a title and an icon.
-                        // notificationPayload.actions = ...
+                        // Optionally add actions (array of objects which have an action ('open' or 'dismiss'), a title and an icon.
+                        let actions = getProperty('actions')
+                        if (actions && Array.isArray(actions) && actions.length > 0) {
+                            notificationPayload.actions = actions
+                        }
 
                         // The notificationPayload.data contains (optional) custom key-value pairs, which a web app needs
                         // to handle the notification properly.  For this node it is used to pass the url to the frontend, 
