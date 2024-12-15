@@ -13,7 +13,7 @@ export default defineConfig({
     plugins: [vue(), cssInjectedByJsPlugin()],
     build: {
         // Skip minification in dev mode
-        minify: process.env.NODE_ENV !== 'development',
+        minify: process.env.NODE_ENV === 'development' ? false : undefined,
 
         // Configure build as a UMD library
         lib: {
