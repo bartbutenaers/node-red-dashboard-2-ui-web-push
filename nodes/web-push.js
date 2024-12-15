@@ -40,7 +40,7 @@ module.exports = function (RED) {
                const updates = msg.ui_update
                 // Store all the dynamic properties, to make sure their values are still available at browser refresh
                 // Note that it is NOT possible to dynamically override the VAPID settings (public, private key, subject).
-                // Because when dynamically overwritting those, all existing subscriptions would become useless. 
+                // Because when dynamically overwritting those, all existing subscriptions would become useless.
                 if (updates) {
                     if (typeof updates.actions !== 'undefined') {
                         if (Array.isArray(updates.actions) && updates.actions.every(item => item.action && item.title && item.icon)) {
@@ -206,18 +206,18 @@ module.exports = function (RED) {
                         let notificationPayload = {
                             title: getProperty('title'),
                             // The body is passed as msg payload (instead of a dynamic property) because in most cases
-                            // the notification body will be different for every notification.  For example the name of 
+                            // the notification body will be different for every notification.  For example the name of
                             // the sensor that triggered the value.
                             body: body
                         }
 
-                        // Small monochrome icon to indicate which app sent the notification (on the device’s status bar or notification center) 
+                        // Small monochrome icon to indicate which app sent the notification (on the device’s status bar or notification center)
                         let badge = getProperty('badge')
                         if (badge && badge !== '') {
                             notificationPayload.badge = badge
                         }
 
-                        // A larger full-color image within the notification, that helps visually identify the notification’s source or content. 
+                        // A larger full-color image within the notification, that helps visually identify the notification’s source or content.
                         let icon = getProperty('icon')
                         if (icon && icon !== '') {
                             notificationPayload.icon = icon
@@ -253,7 +253,7 @@ module.exports = function (RED) {
                         }
 
                         // The notificationPayload.data contains (optional) custom key-value pairs, which a web app needs
-                        // to handle the notification properly.  For this node it is used to pass the url to the frontend, 
+                        // to handle the notification properly.  For this node it is used to pass the url to the frontend,
                         // so the url will be opened by the service worker when the notification is clicked.
                         // The most common use case an url referring to the Node-RED dashboard tabsheet, which can provide
                         // extra detailed information about the notification.
@@ -403,14 +403,17 @@ module.exports = function (RED) {
     //     //ui: { path: "ui" },
     // But as soon as the user has specified a custom UI path there, we will need to use that path:
     //     ui: { path: "mypath" },
-    var uiPath = ((RED.settings.ui || {}).path) || 'dashboard'
+    let uiPath = ((RED.settings.ui || {}).path) || 'dashboard'
+
+    // Remove optional spaces and forward slashes at the start and end of the ui path
+    uiPath = uiPath.trim().replace(/^\/|\/$/g, '')
 
     // Create the complete server-side path.
     // Normally the node id is not required in the endpoint, however we want to register the (same) service worker script
     // for every ui-web-push node.  Reason is that each service worker registration can have its own push subscription.
     // Indeed each ui-web-push node can have its own vapid configuration, so it needs its own service worker.  That
     // way multiple vapid configurations can be used on a single dashboard, although I don't see any use cases at the moment.
-    uiPath = '/ui_web_push/:node_id/web_push_service_worker.js'
+    uiPath = '/' + uiPath + '/ui_web_push/:node_id/web_push_service_worker.js'
 
     // Replace a sequence of multiple slashes (e.g. // or ///) by a single one
     uiPath = uiPath.replace(/\/+/g, '/')
@@ -430,6 +433,6 @@ module.exports = function (RED) {
         }
 
         // Send the requested file to the client
-        res.type("js").send(fileContent)
+        res.type(".js").send(fileContent)
     })
 }
