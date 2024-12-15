@@ -128,7 +128,7 @@ export default {
         // Because a browser allows you to get a subscription from the push manager for each service worker url.
         // That way each web push ui node will have its own subscription, which allows users to use multiple web
         // push ui nodes in the same dashboard.
-        let serviceWorkerUrl = '/ui_web_push/' + this.id + '/web_push_service_worker.js'
+        let serviceWorkerUrl = './ui_web_push/' + this.id + '/web_push_service_worker.js'
 
         // ALWAYS register a service worker, even when the user doesn't subscribe for push notifications.
         // It will run in background (as a separate thread) and won't do anything until the browser calls it.
@@ -165,6 +165,7 @@ export default {
                 // Seems there is no subscription available yet, so keep the switch in its initial status (OFF)
             })
         }).catch((error) => {
+// TODO show error
             // Seems the service worker cannot be registered, so keep the switch in its initial status (OFF)
             this.setSwitchMessage('Cannot download and register service worker js file')
         })
